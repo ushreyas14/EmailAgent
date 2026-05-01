@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Eye, EyeOff, Send } from 'lucide-react';
+import { Mail, Eye, EyeOff, Send, LogIn } from 'lucide-react';
 
 export default function EmailPreview({ 
   recipient, 
@@ -9,18 +9,17 @@ export default function EmailPreview({
   bcc, 
   onUpdate, 
   onSend, 
-  isSending 
+  isSending,
+  isAuthenticated   // NEW: disables send when user is not logged in
 }) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleUpdate = (field, value) => {
-    onUpdate({
-      recipient, subject, body, cc, bcc,
-      [field]: value
-    });
+    onUpdate({ recipient, subject, body, cc, bcc, [field]: value });
   };
 
   const isFormValid = recipient && recipient.trim().length > 0;
+  const canSend = isFormValid && isAuthenticated && !isSending;
 
   return (
     <div className="email-preview-card">
@@ -99,10 +98,17 @@ export default function EmailPreview({
       </div>
 
       <div className="preview-footer">
+        {!isAuthenticated && (
+          <div className="auth-required-notice">
+            <LogIn size={14} />
+            <span>Login with Google to send emails</span>
+          </div>
+        )}
         <button 
           className="send-button"
           onClick={onSend}
-          disabled={!isFormValid || isSending}
+          disabled={!canSend}
+          title={!isAuthenticated ? 'Please login first' : !isFormValid ? 'Recipient required' : 'Send email'}
         >
           {isSending ? (
             <div className="spinner"></div>

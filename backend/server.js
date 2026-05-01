@@ -1,41 +1,59 @@
 require('dotenv').config();
 const express = require('express');
+const session = require('express-session');
 const cors = require('cors');
 
 const authRoutes = require('./routes/auth');
 const emailRoutes = require('./routes/email');
-const { oauth2Client } = require('./config/oauth');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
+// ─── CORS ────────────────────────────────────────────────────────────────────
+// Must be configured BEFORE session middleware so preflight OPTIONS requests
+// are handled correctly and the session cookie is allowed cross-origin.
 app.use(cors({
   origin: FRONTEND_URL,
-  credentials: true
+  credentials: true          // Allow cookies / session to be sent
 }));
 
+// ─── Session ─────────────────────────────────────────────────────────────────
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback-secret-change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,          // Not accessible via JS — XSS protection
+    secure: false,           // Set to true in production (HTTPS only)
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+  }
+}));
+
+// ─── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json());
 
-// Mount routes
+// ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/auth', authRoutes);
 app.use('/api', emailRoutes);
 
-// Health check endpoint
+// ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
-  const oauthStatus = process.env.GOOGLE_REFRESH_TOKEN ? 'configured' : 'missing_token';
   const geminiStatus = process.env.GEMINI_API_KEY ? 'configured' : 'missing_key';
-  
+  const sessionUser = req.session?.userEmail || null;
+
   res.json({
-    message: 'Email Agent API is running',
-    oauth: oauthStatus,
-    gemini: geminiStatus
+    message: 'Email Agent API is running (Multi-User OAuth)',
+    gemini: geminiStatus,
+    session: sessionUser ? `active (${sessionUser})` : 'none'
   });
 });
 
+// ─── Start ────────────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Frontend URL: ${FRONTEND_URL}`);
-  console.log(`OAuth Status: ${process.env.GOOGLE_REFRESH_TOKEN ? 'Configured' : 'Missing Refresh Token'}`);
-  console.log(`Gemini Status: ${process.env.GEMINI_API_KEY ? 'Configured' : 'Missing API Key'}`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🌐 Frontend URL: ${FRONTEND_URL}`);
+  console.log(`🔑 Gemini: ${process.env.GEMINI_API_KEY ? 'Configured' : 'Missing API Key'}`);
+  console.log(`🔐 Session secret: ${process.env.SESSION_SECRET ? 'Set' : 'Using fallback!'}`);
 });

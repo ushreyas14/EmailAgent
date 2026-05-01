@@ -24,14 +24,49 @@ function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
+  const [isAuthenticated, setIsAuthenticated] = useState(false);  // NEW
 
   useEffect(() => {
+    // Restore dark mode preference
     const savedDarkMode = localStorage.getItem('darkMode') === 'true';
     setDarkMode(savedDarkMode);
     if (savedDarkMode) document.body.classList.add('dark-mode');
 
+    // Restore email history
     const savedHistory = JSON.parse(localStorage.getItem('emailHistory') || '[]');
     setEmailHistory(savedHistory);
+
+    // Handle OAuth callback: detect ?auth=success or ?auth=error in the URL.
+    // This runs in the POPUP window after Google redirects back.
+    // We use localStorage to signal the parent window because Google's
+    // Cross-Origin-Opener-Policy severs window.opener, making postMessage impossible.
+    const params = new URLSearchParams(window.location.search);
+    const authResult = params.get('auth');
+
+    if (authResult) {
+      if (authResult === 'success') {
+        // Signal the parent window via localStorage (immune to COOP)
+        localStorage.setItem('oauth_result', JSON.stringify({
+          type: 'AUTH_SUCCESS',
+          timestamp: Date.now()
+        }));
+      } else {
+        const reason = params.get('reason') || 'unknown';
+        localStorage.setItem('oauth_result', JSON.stringify({
+          type: 'AUTH_ERROR',
+          reason,
+          timestamp: Date.now()
+        }));
+        toast.error(`Authentication failed: ${reason}`);
+      }
+
+      // Clean the URL
+      window.history.replaceState({}, '', '/');
+
+      // Try to close the popup. If this is a full-page redirect (not a popup),
+      // window.close() will be silently ignored by the browser.
+      window.close();
+    }
   }, []);
 
   const toggleDarkMode = () => {
@@ -87,6 +122,11 @@ function App() {
   };
 
   const handleSendEmail = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login with Google first.');
+      return;
+    }
+
     if (!emailData.recipient) {
       toast.error('Recipient is required');
       return;
@@ -105,12 +145,12 @@ function App() {
       );
 
       toast.success('Email sent successfully!');
-      setStatusMsg({ type: 'success', text: 'Email sent successfully!' });
+      setStatusMsg({ type: 'success', text: `Email sent from your account! ✅` });
 
       const newHistory = [
-        { ...emailData, id: res.messageId, timestamp: res.timestamp },
+        { ...emailData, id: res.messageId, timestamp: res.timestamp, from: res.from },
         ...emailHistory
-      ].slice(0, 20); // Keep last 20
+      ].slice(0, 20);
       
       setEmailHistory(newHistory);
       localStorage.setItem('emailHistory', JSON.stringify(newHistory));
@@ -123,8 +163,9 @@ function App() {
 
     } catch (error) {
       if (error.needsAuth) {
-        toast.error('Authentication required. Please connect Gmail.');
-        setStatusMsg({ type: 'error', text: 'Authentication required.' });
+        toast.error('Session expired. Please login again.');
+        setIsAuthenticated(false);
+        setStatusMsg({ type: 'error', text: 'Authentication required. Please login again.' });
       } else {
         toast.error(error.message || 'Failed to send email');
         setStatusMsg({ type: 'error', text: 'Failed to send email.' });
@@ -173,7 +214,8 @@ function App() {
 
       <main className="app-main">
         <div className="auth-section">
-          <AuthStatus />
+          {/* Pass onAuthChange so App knows when user logs in/out */}
+          <AuthStatus onAuthChange={setIsAuthenticated} />
         </div>
 
         {showTemplates && (
@@ -237,6 +279,7 @@ function App() {
             onUpdate={setEmailData}
             onSend={handleSendEmail}
             isSending={isSending}
+            isAuthenticated={isAuthenticated}
           />
         </section>
       </main>

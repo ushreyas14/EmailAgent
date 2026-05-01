@@ -7,7 +7,8 @@ async function parseWithGemini(input) {
     throw new Error("Gemini API Key not configured.");
   }
   
-  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+  const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+  const model = genAI.getGenerativeModel({ model: modelName });
   
   const prompt = `
     Extract the email recipient, subject, and body from the following text.

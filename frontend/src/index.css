@@ -414,3 +414,75 @@ body.dark-mode .preview-footer { background: rgba(255,255,255,0.02); }
   .app-container { padding: 1rem; }
   .preview-body { padding: 1rem; }
 }
+
+/* ── Auth status upgrades ───────────────────────────────────────────────────── */
+.auth-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-status.skeleton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-muted);
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 1.5rem;
+  background: var(--card-bg);
+  font-size: 0.9rem;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  color: var(--success);
+  border: 1px solid var(--success);
+  padding: 0.4rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.logout-button:hover:not(:disabled) {
+  background: rgba(16, 185, 129, 0.12);
+}
+.logout-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Auth-required notice in EmailPreview footer ────────────────────────────── */
+.preview-footer {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background: rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+body.dark-mode .preview-footer { background: rgba(255,255,255,0.02); }
+
+.auth-required-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--warning);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-weight: 500;
+}
+body.dark-mode .auth-required-notice { color: var(--warning); }
+
+/* ── Spin animation for Loader2 icon ────────────────────────────────────────── */
+.spin {
+  animation: spin 0.9s linear infinite;
+}
