@@ -1,7 +1,9 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 const cors = require('cors');
+const path = require('path');
 
 const authRoutes = require('./routes/auth');
 const emailRoutes = require('./routes/email');
@@ -19,7 +21,15 @@ app.use(cors({
 }));
 
 // ─── Session ─────────────────────────────────────────────────────────────────
+// Using FileStore so sessions survive nodemon / server restarts.
+// Sessions are stored in ./sessions/ as JSON files.
 app.use(session({
+  store: new FileStore({
+    path: path.join(__dirname, 'sessions'),
+    ttl: 7 * 24 * 60 * 60,     // 7 days (in seconds)
+    retries: 1,
+    logFn: () => {}             // suppress noisy session-file-store logs
+  }),
   secret: process.env.SESSION_SECRET || 'fallback-secret-change-me',
   resave: false,
   saveUninitialized: false,

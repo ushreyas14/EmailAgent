@@ -57,6 +57,17 @@ typings/
 # dotenv environment variables file
 .env
 .env.test
+.env.local
+
+# Google Cloud Credentials
+google-credentials.json
+backend/google-credentials.json
+
+# Local App Data
+tokens.json
+backend/tokens.json
+sessions/
+backend/sessions/
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

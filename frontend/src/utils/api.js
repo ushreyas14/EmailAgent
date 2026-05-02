@@ -1,5 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
+
 /** Default fetch options — always include cookies for session support */
 const defaultOptions = {
   credentials: 'include',
@@ -66,4 +67,28 @@ export async function logout() {
   });
   if (!response.ok) throw new Error('Logout failed');
   return response.json();
+}
+
+/**
+ * Send a WAV audio Blob to the backend for Google Cloud Speech-to-Text
+ * transcription and auto-parsing.
+ *
+ * @param {FormData} formData - Must contain an "audio" field with a WAV Blob.
+ * @returns {Promise<{ success: boolean, transcript: string, parsed: object }>}
+ */
+export async function transcribeAudio(formData) {
+  // Do NOT set Content-Type — the browser sets multipart/form-data + boundary
+  const response = await fetch(`${API_URL}/api/speech-to-text`, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to transcribe audio');
+  }
+
+  return data;
 }

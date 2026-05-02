@@ -1,3 +1,14 @@
+# Logs
 *.err
 *.log
+
+# Dependencies
+node_modules/
+
+# Credentials
+.env
+google-credentials.json
+
+# Local Storage
 tokens.json
+sessions/

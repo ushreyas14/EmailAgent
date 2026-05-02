@@ -486,3 +486,65 @@ body.dark-mode .auth-required-notice { color: var(--warning); }
 .spin {
   animation: spin 0.9s linear infinite;
 }
+
+/* ── Voice input — Google STT states ────────────────────────────────────────── */
+.voice-button.processing {
+  background: var(--warning, #f59e0b);
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+/* Animated recording dots */
+.listening-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+  font-size: 0.875rem;
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.recording-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--danger);
+  animation: recordingBounce 0.9s ease-in-out infinite;
+}
+.recording-dot:nth-child(2) { animation-delay: 0.2s; }
+.recording-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes recordingBounce {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50%       { transform: translateY(-5px); opacity: 0.5; }
+}
+
+/* "Sending to Google STT…" label while processing */
+.processing-indicator {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Small "Powered by Google STT" badge below the button */
+.voice-stt-badge {
+  margin-top: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+}
+
+/* Unsupported browser notice */
+.voice-unsupported {
+  padding: 0.75rem 1rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid var(--warning, #f59e0b);
+  border-radius: 8px;
+  color: #b45309;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+body.dark-mode .voice-unsupported { color: var(--warning, #f59e0b); }
