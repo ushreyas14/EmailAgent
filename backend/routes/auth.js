@@ -4,6 +4,8 @@ const { saveTokens, getTokens: loadTokens, deleteTokens } = require('../config/t
 
 const router = express.Router();
 
+// In same-origin production (Render), FRONTEND_URL can be the Render URL itself.
+// In local dev, Vite runs on port 5173 separately from the backend.
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
 // ─── GET /auth/google ─────────────────────────────────────────────────────────

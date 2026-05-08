@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { CheckCircle2, AlertCircle, Mail, LogOut, Loader2 } from 'lucide-react';
 import { getAuthStatus, logout } from '../utils/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL ?? '';
 
 /**
  * AuthStatus component
