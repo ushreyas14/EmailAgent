@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { Moon, Sun, Clock, FileText, Send } from 'lucide-react';
-import AuthStatus from './components/AuthStatus';
+import AuthStatus from './components/authstatus';
 import VoiceInput from './components/VoiceInput';
 import TextInput from './components/TextInput';
 import EmailPreview from './components/EmailPreview';
