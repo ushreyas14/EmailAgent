@@ -5,9 +5,17 @@ const fs = require('fs');
 const { SpeechClient } = require('@google-cloud/speech');
 
 // ─── Client ──────────────────────────────────────────────────────────────────
-const speechClient = new SpeechClient({
-  keyFilename: path.resolve(process.env.GOOGLE_APPLICATION_CREDENTIALS)
-});
+// Production (Render): credentials are passed as a JSON string env variable
+// Local dev:           credentials are read from a file path
+let speechClient;
+if (process.env.GOOGLE_CREDENTIALS_JSON) {
+  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS_JSON);
+  speechClient = new SpeechClient({ credentials });
+} else {
+  speechClient = new SpeechClient({
+    keyFilename: path.resolve(process.env.GOOGLE_APPLICATION_CREDENTIALS)
+  });
+}
 
 // ─── Recognition config ───────────────────────────────────────────────────────
 // boost: 20.0 strongly biases the model toward these domain-specific phrases,

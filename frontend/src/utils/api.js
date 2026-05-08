@@ -1,4 +1,7 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// In production (same-origin Render deploy): VITE_API_URL is empty, so all
+// fetch calls like fetch(`${API_URL}/api/...`) become relative paths — no domain needed.
+// In local dev: VITE_API_URL=http://localhost:5000 from .env.local
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000';
 
 
 /** Default fetch options — always include cookies for session support */
