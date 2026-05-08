@@ -13,6 +13,15 @@ const PORT = process.env.PORT || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
+// ─── Trust proxy ──────────────────────────────────────────────────────────────
+// Render (and most cloud hosts) run behind a reverse proxy / load balancer.
+// The proxy terminates SSL, so Express sees HTTP internally. Without this,
+// Express refuses to set secure cookies because it thinks the connection is
+// not HTTPS.  trust proxy = 1 means "trust the first proxy".
+if (IS_PRODUCTION) {
+  app.set('trust proxy', 1);
+}
+
 // ─── CORS ────────────────────────────────────────────────────────────────────
 // In production (same-origin on Render): CORS is not needed but kept for safety.
 // In development: allows Vite dev server (localhost:5173) to talk to this server.
