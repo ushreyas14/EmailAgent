@@ -97,3 +97,14 @@ Thumbs.db
 # Build directory
 dist
 dist-ssr
+
+# Markdown docs & agent config files
+*.md
+AGENTS.md
+CLAUDE.md
+
+# IDE & tool files
+.vscode/
+.gemini/
+agent.json
+test.py

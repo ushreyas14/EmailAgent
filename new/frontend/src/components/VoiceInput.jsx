@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, Square, Loader2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { transcribeAudio } from '../utils/api';
@@ -65,10 +65,12 @@ function encodeWav(float32Samples, inputSampleRate) {
 export default function VoiceInput({ onTranscript }) {
   const [status, setStatus] = useState('idle'); // 'idle' | 'recording' | 'processing'
   const [supported] = useState(() => !!(navigator.mediaDevices?.getUserMedia && window.MediaRecorder));
+  const [timeLeft, setTimeLeft] = useState(60);
 
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const audioCtxRef = useRef(null);
+  const timerRef = useRef(null);
 
   // ── Start recording ──────────────────────────────────────────────────────
   const startRecording = useCallback(async () => {
@@ -179,6 +181,28 @@ export default function VoiceInput({ onTranscript }) {
     }
   }, [onTranscript]);
 
+  useEffect(() => {
+    if (status === 'recording') {
+      setTimeLeft(60);
+      timerRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            stopRecording();
+            toast.warn('Maximum recording duration of 60 seconds reached.');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      if (timerRef.current) clearInterval(timerRef.current);
+    }
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [status, stopRecording]);
+
   const handleToggle = () => {
     if (status === 'recording') {
       stopRecording();
@@ -234,7 +258,7 @@ export default function VoiceInput({ onTranscript }) {
           <span className="recording-dot" />
           <span className="recording-dot" />
           <span className="recording-dot" />
-          Listening… speak now, then click Stop.
+          Listening… {timeLeft}s remaining
         </div>
       )}
 
