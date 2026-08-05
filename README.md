@@ -37,56 +37,37 @@ The diagram below traces a single user request — from speaking into the microp
 
 ```mermaid
 flowchart TD
-    subgraph USER["👤 User - Browser"]
-        A([🎙️ User speaks email command]) --> B[VoiceInput.jsx\nRecord audio via MediaRecorder API]
-        B --> C[Audio chunks collected\nas WebM/Opus blob]
-    end
+    A([🎙️ User speaks email command])
+    A --> B[Voice Recorder\nCapture audio via MediaRecorder API]
 
-    subgraph FRONTEND["⚛️ Frontend — React + Vite"]
-        C --> D[POST /api/email/transcribe\nFormData with audio file]
-        D --> E[App.jsx\nDisplay transcription\nAllow user review and edit]
-        E --> F{User clicks\nSend Email}
-        F --> G[POST /api/email/send\nJSON: recipient, subject, body, cc, bcc]
-    end
+    B --> C[POST to Backend\nSend audio as multipart FormData]
 
-    subgraph BACKEND["🖥️ Backend — Node.js + Express"]
-        D --> H[email.js route\nReceive multipart audio upload]
-        H --> I[speechService.js\nGoogle Cloud Speech-to-Text API\nlanguageCode: en-IN\nenableAutomaticPunctuation]
-        I --> J[transcriptCleaner.js\nMulti-pass normalisation\nFix at-signs and dots\nReconstruct email addresses\nRemove filler words]
-        J --> K[parserservice.js\nGemini 2.5 Flash LLM\nExtract: recipient / subject / body\nFallback: regex parser]
-        K --> L[Return structured JSON\nrecipient, subject, body, method]
-        L --> D
+    C --> D[Speech-to-Text\nGoogle Cloud STT · en-IN · auto-punctuation]
 
-        G --> M[email.js route\nAuth middleware checks session]
-        M --> N{Valid session\nand OAuth tokens?}
-        N -->|No| O[🔐 Redirect to\nGoogle OAuth login]
-        O --> P[auth.js route\nGoogle OAuth2 consent screen]
-        P --> Q[auth/google/callback\nExchange code for tokens\nStore in tokenStore.js]
-        Q --> N
+    D --> E[Transcript Cleaner\nFix @ signs · dots · email address fragments]
 
-        N -->|Yes| R[emailservice.js\nBuild RFC 2822 message\nBase64url-encode]
-        R --> S[Gmail API\nusers.messages.send\nwith per-user OAuth client]
-        S --> T[Auto-refresh access token\non tokens event\nPersist to tokenStore]
-    end
+    E --> F[Gemini AI Parser\nExtract recipient · subject · body]
 
-    subgraph GOOGLE["☁️ Google Cloud Platform"]
-        I <-->|Audio base64| GS[Cloud Speech-to-Text API]
-        K <-->|Prompt and response| GG[Gemini Generative AI API]
-        S <-->|Send request| GM[Gmail API]
-        O <-->|OAuth flow| GO[Google OAuth2 Server]
-    end
+    F --> G{Gemini\navailable?}
 
-    subgraph RESULT["📬 Outcome"]
-        T --> V([✅ Email delivered\nto recipient inbox])
-        E --> W([🔍 User reviews\nAI-generated draft])
-        W --> F
-    end
+    G -->|Yes| H[Structured JSON\nvia Gemini 2.5 Flash]
+    G -->|No| I[Structured JSON\nvia Regex fallback]
 
-    style USER fill:#1e1e2e,stroke:#6C63FF,color:#cdd6f4
-    style FRONTEND fill:#1e1e2e,stroke:#61DAFB,color:#cdd6f4
-    style BACKEND fill:#1e1e2e,stroke:#339933,color:#cdd6f4
-    style GOOGLE fill:#1e1e2e,stroke:#4285F4,color:#cdd6f4
-    style RESULT fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+    H --> J[Email Draft Preview\nUser reviews and edits fields]
+    I --> J
+
+    J --> K{User\nauthenticated?}
+
+    K -->|No| L[Google OAuth2 Login\nConsent screen + token exchange]
+    L --> K
+
+    K -->|Yes| M[Email Builder\nRFC 2822 · Base64url-encoded]
+
+    M --> N[Gmail API\nusers.messages.send]
+
+    N --> O[Token Auto-Refresh\nPersist new access token silently]
+
+    O --> P([✅ Email delivered to recipient])
 ```
 
 ### Pipeline Summary
